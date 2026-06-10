@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Specification Analysis Pipeline</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .details-wrapper { display: grid; grid-template-columns: minmax(300px, 500px) 1fr; gap: 50px; padding: 40px 0; }
+        .preview-pane-img { border-radius: var(--radius); border: 1px solid var(--border-color); box-shadow: var(--shadow); max-height: 500px; width:100%; object-fit: contain; background: #fff;}
+        .meta-info-block { display: flex; flex-direction: column; gap: 20px; }
+        .meta-title { font-size: 2.3rem; line-height: 1.2; }
+        .meta-price-label { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+        .meta-category-tag { display: inline-block; padding: 4px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); width: max-content; border-radius: 20px; font-size: 0.85rem;}
+        @media(max-width: 768px) { .details-wrapper { grid-template-columns: 1fr; gap: 30px; } }
+    </style>
+</head>
+<body>
+    <div id="global-header-marker"></div>
+
+    <main class="container">
+        <div id="productDetailViewport">
+            <div class="spinner"></div>
+        </div>
+        <div class="adsense-placeholder"><span>[AdSense Multiplex Matched Content Overlay Node Element Block]</span></div>
+    </main>
+
+    <div id="global-footer-marker"></div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        (async function resolveActiveProductEntity() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+            const viewport = document.getElementById('productDetailViewport');
+
+            if(!productId) {
+                viewport.innerHTML = `<p class="error-message">Null parameters reference tracking ID value matrix target index location sequence validation failed.</p>`;
+                return;
+            }
+
+            try {
+                const data = await APIManager.fetchProducts();
+                const matchedItem = data.find(p => p.productName === decodeURIComponent(productId));
+
+                if(!matchedItem) {
+                    viewport.innerHTML = `<p class="error-message">The specified analytical node lookup criteria does not correspond to standard storage instances catalog rows references.</p>`;
+                    return;
+                }
+
+                document.title = `${matchedItem.productName} | AffiliateHub Strategic Assessment`;
+                
+                viewport.innerHTML = `
+                    <div class="details-wrapper">
+                        <div>
+                            <img src="${matchedItem.imageUrl}" alt="${matchedItem.productName}" class="preview-pane-img">
+                        </div>
+                        <div class="meta-info-block">
+                            <span class="meta-category-tag">${matchedItem.category}</span>
+                            <h1 class="meta-title">${matchedItem.productName}</h1>
+                            <div class="meta-price-label">${matchedItem.price}</div>
+                            <hr style="border: 0; border-top: 1px solid var(--border-color)">
+                            <p style="color: var(--text-secondary); white-space: pre-wrap;">${matchedItem.description}</p>
+                            <a href="${matchedItem.affiliateLink}" target="_blank" rel="noopener noreferrer nofollow" class="btn" style="padding: 15px 30px; font-size:1.1rem; margin-top:20px;">Acquire Product Securely Via Distribution Portal</a>
+                        </div>
+                    </div>
+                `;
+            } catch(e) {
+                viewport.innerHTML = `<p class="error-message">Error rendering structural data view schemas elements mapping properties.</p>`;
+            }
+        })();
+    </script>
+</body>
+</html>

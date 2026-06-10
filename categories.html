@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories Storefront Catalog Matrix</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .category-wrapper { padding: 40px 0; }
+        .category-list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
+        .full-cat-item { background-color: var(--card-bg); border: 1px solid var(--border-color); padding: 40px 20px; border-radius: var(--radius); text-align: center; font-size: 1.3rem; font-weight: bold; cursor: pointer; box-shadow: var(--shadow); transition: var(--transition); display: block;}
+        .full-cat-item:hover { background-color: var(--accent); color: white !important; }
+    </style>
+</head>
+<body>
+    <div id="global-header-marker"></div>
+    
+    <main class="container category-wrapper">
+        <h1 style="margin-bottom: 30px; text-align: center;">Browse by Segment Matrix</h1>
+        <div id="categoryContainer" class="category-list-grid">
+            <div class="spinner"></div>
+        </div>
+    </main>
+
+    <div id="global-footer-marker"></div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        (async function() {
+            try {
+                const data = await APIManager.fetchProducts();
+                const categorySet = new Set(data.map(p => p.category).filter(Boolean));
+                const container = document.getElementById('categoryContainer');
+                container.innerHTML = '';
+                
+                categorySet.forEach(cat => {
+                    container.innerHTML += `<a href="products.html?category=${encodeURIComponent(cat)}" class="full-cat-item">${cat}</a>`;
+                });
+            } catch(e) {
+                document.getElementById('categoryContainer').innerHTML = `<p class="error-message">Error connecting dynamically calculated index arrays blocks.</p>`;
+            }
+        })();
+    </script>
+</body>
+</html>
