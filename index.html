@@ -71,14 +71,14 @@
                 const categorySet = new Set(data.map(p => p.category).filter(Boolean));
                 const catContainer = document.getElementById('featuredCategories');
                 catContainer.innerHTML = '';
-                Array.from(categorySet).slice(0, 4).forEach(cat => {
+                Array.from(categorySet).slice(0, 5).forEach(cat => {
                     catContainer.innerHTML += `<a href="categories.html?category=${encodeURIComponent(cat)}" class="cat-card">${cat}</a>`;
                 });
 
                 // Display limited top 3 items inside spotlight loop module grid configuration matches
                 const prodContainer = document.getElementById('featuredProducts');
                 prodContainer.innerHTML = '';
-                data.slice(0, 3).forEach(p => {
+                data.slice(0, 6).forEach(p => {
                     prodContainer.innerHTML += createProductCard(p);
                 });
                 
