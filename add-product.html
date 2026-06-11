@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Product Catalog Intake Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-wrapper { padding: 50px 20px; max-width: 700px; margin: 0 auto; }
+        .admin-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .admin-card h1 { font-size: 1.8rem; margin-bottom: 25px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; text-align: center; }
+        
+        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 15px; border-radius: var(--radius); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; transition: var(--transition); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+        
+        .security-banner { background: #fef3c7; border: 1px solid #f59e0b; color: #78350f; padding: 12px 15px; border-radius: var(--radius); margin-bottom: 25px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+        [data-theme="dark"] .security-banner { background: #78350f; border: 1px solid #d97706; color: #fef3c7; }
+        
+        .status-alert { padding: 15px; border-radius: var(--radius); font-weight: 600; text-align: center; margin-bottom: 25px; display: none; animation: fadeIn 0.3s ease; }
+        .status-success { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .status-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        [data-theme="dark"] .status-success { background-color: #065f46; color: #d1fae5; border: 1px solid #047857; }
+        [data-theme="dark"] .status-error { background-color: #991b1b; color: #fee2e2; border: 1px solid #b91c1c; }
+
+        .btn-submit { width: 100%; padding: 14px; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="global-header-marker"></div>
+
+    <main class="container admin-wrapper">
+        <div class="admin-card">
+            <h1>Append Storefront Product Row</h1>
+            
+            <div class="security-banner">
+                <span>🔐</span> This operation requires an authorized admin system token signature verification.
+            </div>
+
+            <div id="statusAlert" class="status-alert"></div>
+
+            <form id="productIntakeForm">
+                <div class="form-group">
+                    <label for="adminPassword">Administrative System Access Password</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••••••••••">
+                </div>
+                
+                <hr style="border:0; border-top: 1px dashed var(--border-color); margin: 25px 0;">
+
+                <div class="form-group">
+                    <label for="category">Product Segment Category</label>
+                    <input type="text" id="category" required placeholder="e.g., Electronics, Home, Fitness" list="categorySuggestions">
+                    <datalist id="categorySuggestions">
+                        </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="productName">Official Product Name</label>
+                    <input type="text" id="productName" required placeholder="e.g., Sony WH-1000XM4 Wireless Headphones">
+                </div>
+
+                <div class="form-group">
+                    <label for="imageUrl">Absolute Image Asset URL</label>
+                    <input type="url" id="imageUrl" required placeholder="https://images.unsplash.com/... or https://i.imgur.com/...">
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Display Price String</label>
+                    <input type="text" id="price" required placeholder="e.g., $348.00 or £299.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Product Specification & Editorial Description</label>
+                    <textarea id="description" rows="5" required placeholder="Provide an engaging product synopsis or features list to drive affiliate sales traffic conversion metrics..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="affiliateLink">Target Distribution Affiliate Link</label>
+                    <input type="url" id="affiliateLink" required placeholder="https://amazon.com/dp/example-affiliate-tag">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-submit">
+                    <span id="btnText">Commit Row to Google Sheet</span>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <div id="global-footer-marker"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Use the exact operational URL endpoint established in your api.js config
+        const POST_API_URL = API_URL;
+
+        // Populate category dropdown suggestions dynamically from your live Google Sheet on load
+        (async function fetchExistingCategories() {
+            try {
+                const data = await APIManager.fetchProducts();
+                const categories = new Set(data.map(p => p.category).filter(Boolean));
+                const datalist = document.getElementById('categorySuggestions');
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    datalist.appendChild(option);
+                });
+            } catch (e) {
+                console.warn("Could not dynamically load existing categories list for autocomplete options.");
+            }
+        })();
+
+        // Handle structural payload submission
+        document.getElementById('productIntakeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const alertBox = document.getElementById('statusAlert');
+
+            // Collect values and structure the transfer payload block
+            const payload = {
+                password: document.getElementById('adminPassword').value,
+                category: document.getElementById('category').value.trim(),
+                productName: document.getElementById('productName').value.trim(),
+                imageUrl: document.getElementById('imageUrl').value.trim(),
+                price: document.getElementById('price').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                affiliateLink: document.getElementById('affiliateLink').value.trim()
+            };
+
+            // Enter submission visual state
+            submitBtn.disabled = true;
+            btnText.textContent = "Writing Row Sequence Data...";
+            alertBox.style.display = 'none';
+
+            try {
+                // Using standard text/plain bypass mapping to work around simple cross-origin CORS constraints
+                const response = await fetch(POST_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Standard operational parameter mode for Google Script execution bindings
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Inform user of execution completion 
+                alertBox.className = "status-alert status-success";
+                alertBox.textContent = "Transaction Completed! The product record has been written directly to your Google Sheets database. If errors persist check authorization token credentials validation.";
+                alertBox.style.display = 'block';
+                
+                // Clear the product text fields but keep the password for subsequent uploads
+                document.getElementById('category').value = '';
+                document.getElementById('productName').value = '';
+                document.getElementById('imageUrl').value = '';
+                document.getElementById('price').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('affiliateLink').value = '';
+
+                // Clear structural localStorage caches to force the client layout views to sync new data instantly
+                localStorage.removeItem('affiliate_products_data');
+                localStorage.removeItem('affiliate_products_timestamp');
+
+            } catch (error) {
+                alertBox.className = "status-alert status-error";
+                alertBox.textContent = `Transmission Interface Error: ${error.message || 'System failed to write entry rows.'}`;
+                alertBox.style.display = 'block';
+            } finally {
+                // Restore submission state buttons interactivity
+                submitBtn.disabled = false;
+                btnText.textContent = "Commit Row to Google Sheet";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
